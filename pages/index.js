@@ -3,6 +3,7 @@ import Image from 'next/image';
 import styles from '../styles/Home.module.css';
 import { useS3Upload } from 'next-s3-upload';
 import { useState } from 'react';
+import imageCompression from 'browser-image-compression';
 
 export default function Home() {
 	let [imageUrl, setImageUrl] = useState();
@@ -10,6 +11,27 @@ export default function Home() {
 
 	let handleFileChange = async (event) => {
 		let file = event.target.files[0];
+		console.log(file);
+		console.log(`originalFile size ${file.size / 1024 / 1024} MB`);
+
+		// Compression config
+		const options = {
+			// As the key specify the maximum size
+			// Leave blank for infinity
+			maxSizeMB: 0.1,
+			// Use webworker for faster compression with
+			// the help of threads
+			useWebWorker: true
+		};
+
+		const compressedFile = await imageCompression(file, options);
+
+		console.log(compressedFile);
+		console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`);
+
+		const originalOrCompress = file.size > 100000 ? compressedFile : file;
+		console.log(originalOrCompress);
+
 		let { url } = await uploadToS3(file);
 
 		console.log(files);
